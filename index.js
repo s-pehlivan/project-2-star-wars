@@ -1,7 +1,8 @@
 const charRow = document.getElementById("char-row");
+const inputSection = document.getElementById("inputs");
 const button = document.getElementById("show-char");
 
-const chars = [
+const charsRaw = [
   {
     id: 1,
     name: "Luke Skywalker",
@@ -99,32 +100,72 @@ const chars = [
     homeworld: "tatooine",
   },
   {
-    id: 18,
+    id: 17,
     name: "Wedge Antilles",
     pic: "https://vignette.wikia.nocookie.net/starwars/images/6/60/WedgeHelmetless-ROTJHD.jpg",
     homeworld: "corellia",
   },
   {
-    id: 19,
+    id: 18,
     name: "Jek Tono Porkins",
     pic: "https://vignette.wikia.nocookie.net/starwars/images/e/eb/JekPorkins-DB.png",
     homeworld: "bestine",
   },
   {
-    id: 20,
+    id: 19,
     name: "Yoda",
     pic: "https://vignette.wikia.nocookie.net/starwars/images/d/d6/Yoda_SWSB.png",
   },
   {
-    id: 21,
+    id: 20,
     name: "Palpatine",
     pic: "https://vignette.wikia.nocookie.net/starwars/images/d/d8/Emperor_Sidious.png",
     homeworld: "naboo",
   },
 ];
 
-const cards = chars.map((e) => {
-  return `<div class="col d-flex g-x justify-content-center">
+const chars = charsRaw.map((e) => {
+  e.homeworld === undefined
+    ? (e.homeworld = "other")
+    : (e.homeworld = e.homeworld.toLowerCase());
+  return e;
+});
+
+const homeworldsRaw = chars.map((e) => {
+  return e.homeworld.toLowerCase();
+});
+
+const homesworldUnique = new Set(homeworldsRaw);
+const homeworlds = [...homesworldUnique];
+
+let filteredWorld = "";
+
+const inputs = homeworlds.map((e) => {
+  return `<div class="form-check">
+    <input class="form-check-input" onchange="radioCheck(this)" type="radio" name="homeworld" id="homeworld-${e}" value="${e}" />
+    <label class="form-check-label" for="${e}">${e
+    .slice(0, 1)
+    .toUpperCase()}${e.slice(1)}</label>
+  </div>`;
+});
+
+function createCharArr(filterText = filteredWorld) {
+  let charArr = [];
+  if (filterText !== "") {
+    charArr = chars.filter((e) => e.homeworld === filterText);
+  } else {
+    charArr = chars.slice();
+  }
+  return charArr;
+}
+
+function createCards() {
+  let charArr = createCharArr();
+
+  let cardsArr = [];
+
+  cardsArr = charArr.map((e) => {
+    return `<div class="col d-flex g-x justify-content-center">
   <div class="card mb-4" style="width: 18rem">
     <img
       src="${e.pic}"
@@ -133,23 +174,49 @@ const cards = chars.map((e) => {
     />
     <div class="card-body">
       <h5 class="card-title">${e.name}</h5>
-      <p class="card-text">Home World:${e.homeworld}</p>
+      <p class="card-text">Home World: ${
+        e.homeworld === undefined
+          ? "Other"
+          : `${e.homeworld.slice(0, 1).toUpperCase()}${e.homeworld.slice(1)}`
+      }</p>
     </div>
   </div>
 </div>`;
-});
+  });
+  return cardsArr;
+}
 
-console.log(cards);
+function radioCheck(inputEl) {
+  if (inputEl.checked) {
+    filteredWorld = inputEl.value;
+    let cards = [];
+    cards = createCards().slice();
+    updateCardsView(cards);
+  } else {
+    filteredWorld = "";
+  }
+}
+
+function updateCardsView(cards) {
+  charRow.innerHTML = "";
+  for (let card of cards) {
+    charRow.innerHTML += card;
+  }
+}
 
 function showChars() {
   if (button.dataset.attribute == "closed") {
     charRow.innerHTML = "";
-    for (let card of cards) {
-      charRow.innerHTML += card;
+    let cards = [];
+    cards = createCards().slice();
+    for (let input of inputs) {
+      inputSection.innerHTML += input;
     }
+    updateCardsView(cards);
     button.dataset.attribute = "opened";
   } else {
     charRow.innerHTML = "";
+    inputSection.innerHTML = "";
     button.dataset.attribute = "closed";
   }
 }
